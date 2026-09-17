@@ -1,148 +1,120 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 500" font-family="Inter, system-ui, sans-serif">
+<svg viewBox="0 0 1200 560" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', -apple-system, Helvetica, Arial, sans-serif">
   <defs>
-    <linearGradient id="gradUser" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#4f46e5"/>
-    </linearGradient>
-    <linearGradient id="gradUI" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#7c3aed"/>
-    </linearGradient>
-    <linearGradient id="gradAPI" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10b981"/>
-      <stop offset="100%" style="stop-color:#059669"/>
-    </linearGradient>
-    <linearGradient id="gradGraph" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f59e0b"/>
-      <stop offset="100%" style="stop-color:#d97706"/>
-    </linearGradient>
-    <linearGradient id="gradAgent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#3b82f6"/>
-      <stop offset="100%" style="stop-color:#2563eb"/>
-    </linearGradient>
-    <linearGradient id="gradMCP" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ec4899"/>
-      <stop offset="100%" style="stop-color:#db2777"/>
-    </linearGradient>
-    <linearGradient id="gradLLM" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f97316"/>
-      <stop offset="100%" style="stop-color:#ea580c"/>
-    </linearGradient>
-    <linearGradient id="gradDB" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#06b6d4"/>
-      <stop offset="100%" style="stop-color:#0891b2"/>
-    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0f766e"/>
+    </marker>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.15"/>
     </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="860" height="500" fill="#f8fafc" rx="12"/>
 
-  <!-- User -->
-  <g filter="url(#shadow)">
-    <rect x="355" y="20" width="150" height="50" rx="25" fill="url(#gradUser)"/>
-    <text x="430" y="50" text-anchor="middle" fill="white" font-size="14" font-weight="600">User</text>
-  </g>
+  <rect x="0" y="0" width="1200" height="560" fill="#fbfbfd"/>
 
-  <!-- Arrow User -> UI -->
-  <path d="M430 70 L430 100" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
-    </marker>
-  </defs>
 
-  <!-- ConfGo UI -->
-  <g filter="url(#shadow)">
-    <rect x="330" y="100" width="200" height="50" rx="10" fill="url(#gradUI)"/>
-    <text x="430" y="130" text-anchor="middle" fill="white" font-size="14" font-weight="600">ConfGo UI</text>
-  </g>
+  <text x="600" y="30" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">ConfGo Architecture</text>
+  <text x="600" y="47" text-anchor="middle" font-size="11.5" fill="#64748b">FastAPI · LangGraph · Groq LLM · MCP</text>
 
-  <!-- Arrow UI -> API -->
-  <path d="M430 150 L430 180" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
 
-  <!-- FastAPI Server -->
-  <g filter="url(#shadow)">
-    <rect x="330" y="180" width="200" height="50" rx="10" fill="url(#gradAPI)"/>
-    <text x="430" y="210" text-anchor="middle" fill="white" font-size="14" font-weight="600">FastAPI Server</text>
-  </g>
+  <!-- Frontend -->
+  <rect x="440" y="70" width="320" height="50" rx="9" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="600" y="100" text-anchor="middle" font-size="13" font-weight="700" fill="#5b21b6">Frontend (SPA)</text>
 
-  <!-- Arrow API -> Graph -->
-  <path d="M430 230 L430 260" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
 
-  <!-- LangGraph Pipeline -->
-  <g filter="url(#shadow)">
-    <rect x="305" y="260" width="250" height="50" rx="10" fill="url(#gradGraph)"/>
-    <text x="430" y="290" text-anchor="middle" fill="white" font-size="14" font-weight="600">LangGraph Pipeline</text>
-  </g>
+  <!-- FastAPI -->
+  <rect x="440" y="150" width="320" height="50" rx="9" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="600" y="180" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">FastAPI Server</text>
 
-  <!-- Agent Boxes -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="340" width="120" height="45" rx="8" fill="url(#gradAgent)"/>
-    <text x="90" y="367" text-anchor="middle" fill="white" font-size="11" font-weight="600">Flight Agent</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="170" y="340" width="120" height="45" rx="8" fill="url(#gradAgent)"/>
-    <text x="230" y="367" text-anchor="middle" fill="white" font-size="11" font-weight="600">Hotel Agent</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="310" y="340" width="120" height="45" rx="8" fill="url(#gradAgent)"/>
-    <text x="370" y="367" text-anchor="middle" fill="white" font-size="11" font-weight="600">Weather Agent</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="450" y="340" width="130" height="45" rx="8" fill="url(#gradAgent)"/>
-    <text x="515" y="367" text-anchor="middle" fill="white" font-size="11" font-weight="600">Itinerary Agent</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="600" y="340" width="120" height="45" rx="8" fill="url(#gradAgent)"/>
-    <text x="660" y="367" text-anchor="middle" fill="white" font-size="11" font-weight="600">Final Agent</text>
+
+  <line x1="600" y1="120" x2="600" y2="148" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+
+
+  <!-- Pipeline container -->
+  <rect x="60" y="230" width="1080" height="130" rx="14" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.5"/>
+  <text x="80" y="252" font-size="12.5" font-weight="700" fill="#0f766e">LangGraph Pipeline</text>
+
+
+  <line x1="600" y1="200" x2="600" y2="228" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+
+  <!-- 5 agent nodes -->
+  <g font-size="11.5">
+    <rect x="100" y="272" width="180" height="66" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.4" filter="url(#shadow)"/>
+    <text x="190" y="296" text-anchor="middle" font-weight="700" fill="#134e4a">Flight Agent</text>
+    <text x="190" y="312" text-anchor="middle" font-size="9.5" fill="#0f766e">AviationStack data</text>
+
+
+    <rect x="305" y="272" width="180" height="66" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.4" filter="url(#shadow)"/>
+    <text x="395" y="296" text-anchor="middle" font-weight="700" fill="#134e4a">Hotel Agent</text>
+    <text x="395" y="312" text-anchor="middle" font-size="9.5" fill="#0f766e">Tavily search (no LLM)</text>
+
+
+    <rect x="510" y="272" width="180" height="66" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.4" filter="url(#shadow)"/>
+    <text x="600" y="296" text-anchor="middle" font-weight="700" fill="#134e4a">Weather Agent</text>
+    <text x="600" y="312" text-anchor="middle" font-size="9.5" fill="#0f766e">OpenWeather data</text>
+
+
+    <rect x="715" y="272" width="180" height="66" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.4" filter="url(#shadow)"/>
+    <text x="805" y="296" text-anchor="middle" font-weight="700" fill="#134e4a">Itinerary Agent</text>
+    <text x="805" y="312" text-anchor="middle" font-size="9.5" fill="#0f766e">day-by-day plan</text>
+
+
+    <rect x="920" y="272" width="180" height="66" rx="8" fill="#ffffff" stroke="#0f766e" stroke-width="1.4" filter="url(#shadow)"/>
+    <text x="1010" y="296" text-anchor="middle" font-weight="700" fill="#134e4a">Final Agent</text>
+    <text x="1010" y="312" text-anchor="middle" font-size="9.5" fill="#0f766e">formats response</text>
   </g>
 
-  <!-- Arrows from Graph to Agents -->
-  <path d="M370 310 L90 340" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M400 310 L230 340" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M430 310 L370 340" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M460 310 L515 340" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M490 310 L660 340" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 
-  <!-- MCP Servers -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="410" width="100" height="40" rx="8" fill="url(#gradMCP)"/>
-    <text x="80" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="600">AviationStack</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="150" y="410" width="80" height="40" rx="8" fill="url(#gradMCP)"/>
-    <text x="190" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="600">Tavily</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="250" y="410" width="100" height="40" rx="8" fill="url(#gradMCP)"/>
-    <text x="300" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="600">OpenWeather</text>
-  </g>
+  <line x1="280" y1="305" x2="303" y2="305" stroke="#0f766e" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <line x1="485" y1="305" x2="508" y2="305" stroke="#0f766e" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <line x1="690" y1="305" x2="713" y2="305" stroke="#0f766e" stroke-width="2" marker-end="url(#arrowAccent)"/>
+  <line x1="895" y1="305" x2="918" y2="305" stroke="#0f766e" stroke-width="2" marker-end="url(#arrowAccent)"/>
 
-  <!-- LLM -->
-  <g filter="url(#shadow)">
-    <rect x="430" y="410" width="100" height="40" rx="8" fill="url(#gradLLM)"/>
-    <text x="480" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="600">Groq LLM</text>
-  </g>
+
+  <!-- Redis Cache -->
+  <rect x="60" y="392" width="200" height="60" rx="9" fill="#fce7f3" stroke="#db2777" stroke-width="1.4" filter="url(#shadow)"/>
+  <text x="160" y="416" text-anchor="middle" font-size="12" font-weight="700" fill="#9d174d">Redis Cache</text>
+  <text x="160" y="432" text-anchor="middle" font-size="9.5" fill="#be185d">optional, per-call TTLs</text>
+  <line x1="350" y1="362" x2="220" y2="390" stroke="#db2777" stroke-width="1.3" stroke-dasharray="4,3"/>
+
+
+  <!-- Groq LLM -->
+  <rect x="300" y="392" width="600" height="60" rx="9" fill="#fef3c7" stroke="#d97706" stroke-width="1.6" filter="url(#shadow)"/>
+  <text x="600" y="416" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Groq LLM (ChatGroq)</text>
+  <text x="600" y="432" text-anchor="middle" font-size="9.5" fill="#b45309">used by Flight, Weather, Itinerary &amp; Final agents to generate text</text>
+  <line x1="190" y1="338" x2="330" y2="390" stroke="#4338ca" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <line x1="600" y1="338" x2="600" y2="390" stroke="#4338ca" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <line x1="805" y1="338" x2="805" y2="390" stroke="#4338ca" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <line x1="1010" y1="338" x2="870" y2="390" stroke="#4338ca" stroke-width="1.2" stroke-dasharray="3,3"/>
+
 
   <!-- PostgreSQL -->
-  <g filter="url(#shadow)">
-    <rect x="600" y="410" width="120" height="40" rx="8" fill="url(#gradDB)"/>
-    <text x="660" y="435" text-anchor="middle" fill="white" font-size="10" font-weight="600">PostgreSQL</text>
+  <rect x="940" y="392" width="200" height="60" rx="9" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4" filter="url(#shadow)"/>
+  <text x="1040" y="416" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">PostgreSQL</text>
+  <text x="1040" y="432" text-anchor="middle" font-size="9.5" fill="#15803d">checkpoints per thread_id</text>
+  <line x1="1035" y1="362" x2="1035" y2="390" stroke="#16a34a" stroke-width="1.3" stroke-dasharray="4,3"/>
+
+
+  <!-- Response back to FastAPI -->
+  <path d="M1170,305 C1200,305 1200,175 762,175" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+
+
+  <!-- Legend -->
+  <g transform="translate(60,500)" font-size="10" fill="#475569">
+    <line x1="0" y1="0" x2="24" y2="0" stroke="#0f766e" stroke-width="2" marker-end="url(#arrowAccent)"/>
+    <text x="30" y="4">pipeline order</text>
+    <line x1="150" y1="0" x2="174" y2="0" stroke="#4338ca" stroke-width="1.2" stroke-dasharray="3,3"/>
+    <text x="180" y="4">calls Groq LLM</text>
+    <line x1="300" y1="0" x2="324" y2="0" stroke="#db2777" stroke-width="1.3" stroke-dasharray="4,3"/>
+    <text x="330" y="4">cache (Redis)</text>
+    <line x1="440" y1="0" x2="464" y2="0" stroke="#16a34a" stroke-width="1.3" stroke-dasharray="4,3"/>
+    <text x="470" y="4">persistence (Postgres)</text>
+    <line x1="640" y1="0" x2="664" y2="0" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+    <text x="670" y="4">response to client</text>
   </g>
 
-  <!-- Arrows from Agents to Services -->
-  <path d="M90 385 L80 410" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M230 385 L190 410" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M370 385 L300 410" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-  <path d="M90 385 L480 410" stroke="#94a3b8" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-  <path d="M370 385 L480 410" stroke="#94a3b8" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-  <path d="M515 385 L480 410" stroke="#94a3b8" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-  <path d="M660 385 L480 410" stroke="#94a3b8" stroke-width="1" fill="none" marker-end="url(#arrow)"/>
-  <path d="M430 230 L660 410" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 
-  <!-- Labels -->
-  <text x="430" y="480" text-anchor="middle" fill="#64748b" font-size="11" font-style="italic">ConfGo - Multi-Agent Conference Trip Planner</text>
 </svg>
