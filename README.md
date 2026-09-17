@@ -1,6 +1,14 @@
 # ConfGo
 
-A multi-agent AI tool that plans your trip to attend tech conferences. Type in the conference name - for example, "Plan a trip to attend PyTorch Conference 2026 in North America with mid-range budget" - and a team of AI agents goes and researches it for you, getting back flights, hotels, weather, and a day-by-day itinerary in about a minute.
+<p align="center">
+  <img src="assets/confgo-logo.png" alt="ConfGo" width="360" />
+</p>
+
+<p align="center">
+  A multi-agent AI tool that plans your trip to attend tech conferences.
+</p>
+
+Type in the conference name - for example, "Plan a trip to attend PyTorch Conference 2026 in North America with mid-range budget" - and a team of AI agents goes and researches it for you, getting back flights, hotels, weather, and a day-by-day itinerary in about a minute.
 
 - **Flights** - airports, airlines, duration, fare range
 - **Hotels** - options matched to your budget and location
@@ -8,44 +16,43 @@ A multi-agent AI tool that plans your trip to attend tech conferences. Type in t
 - **Itinerary** - a realistic day-by-day plan
 - **Budget** - estimated cost breakdown
 
-## Architecture
+## Architecture Overview
 
-```mermaid
-flowchart TD
-    U([User]) --> UI[ConfGo UI]
-    UI --> API[FastAPI]
-    API --> G[LangGraph Pipeline]
-    
-    G --> A1[Flight Agent]
-    G --> A2[Hotel Agent]
-    G --> A3[Weather Agent]
-    G --> A4[Itinerary Agent]
-    G --> A5[Final Agent]
-    
-    A1 --> AS[AviationStack]
-    A2 --> TV[Tavily]
-    A3 --> OW[OpenWeather]
-    
-    A1 --> LLM[Groq LLM]
-    A3 --> LLM
-    A4 --> LLM
-    A5 --> LLM
-    
-    API --> PG[(PostgreSQL)]
-    
-    A5 --> UI
-    UI --> U
+<p align="center">
+  <img src="assets/confgo_arch.svg" alt="ConfGo Architecture" width="860"/>
+</p>
 
-    style U fill:#6366f1,color:#fff
-    style UI fill:#8b5cf6,color:#fff
-    style API fill:#10b981,color:#fff
-    style G fill:#f59e0b,color:#fff
-    style PG fill:#3b82f6,color:#fff
-    style AS fill:#ec4899,color:#fff
-    style TV fill:#ec4899,color:#fff
-    style OW fill:#ec4899,color:#fff
-    style LLM fill:#f97316,color:#fff
+*The user sends a natural-language conference trip request through the ConfGo UI. The FastAPI server resolves credentials, then dispatches the request through a LangGraph pipeline of five specialized agents. Each agent calls external services via MCP (Model Context Protocol) and the Groq LLM, building up flight, hotel, weather, and itinerary data. The final agent formats everything into a polished response, and the conversation is checkpointed to PostgreSQL for multi-turn continuity.*
+
+<details>
+<summary><b>Detailed Agent Flow</b></summary>
+
 ```
+User Request
+     |
+     v
+[FastAPI Server]
+     |
+     v
+[LangGraph Pipeline]
+     |
+     +---> [Flight Agent] ---> AviationStack MCP ---> Groq LLM
+     |
+     +---> [Hotel Agent] ---> Tavily MCP
+     |
+     +---> [Weather Agent] ---> OpenWeather MCP ---> Groq LLM
+     |
+     +---> [Itinerary Agent] ---> Groq LLM (reads all above)
+     |
+     +---> [Final Agent] ---> Groq LLM (formats response)
+     |
+     v
+[PostgreSQL Checkpoint]
+     |
+     v
+Response to User
+```
+</details>
 
 ## Getting started
 
