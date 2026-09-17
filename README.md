@@ -93,3 +93,7 @@ Open http://127.0.0.1:8000 in your browser. You should see a green "API connecte
 - AviationStack for flight data
 - OpenWeather for weather
 - PostgreSQL for saving trips
+
+## Contributing
+
+Happy to collaborate and open to receiving contributions to improve.
