@@ -12,42 +12,46 @@ A multi-agent AI tool that plans your trip to attend tech conferences. Type in t
 
 ```mermaid
 flowchart TD
-    U([User]) -->|Message| UI[ConfGo UI]
-    UI -->|POST /api/travel| API[FastAPI Server]
-    API -->|Validate keys| AUTH[Credential Check]
-    AUTH --> G[LangGraph Pipeline]
+    U([User types conference trip request]) --> UI[ConfGo UI<br/>FastAPI + Jinja2]
     
-    G --> A1[Flight Agent]
-    G --> A2[Hotel Agent]
-    G --> A3[Weather Agent]
-    G --> A4[Itinerary Agent]
-    G --> A5[Final Agent]
+    UI --> API[API Layer<br/>POST /api/travel]
     
-    A1 -->|MCP| AS[AviationStack API]
-    A1 -->|LLM| GQ1[Groq]
+    API --> G{LangGraph<br/>Pipeline}
     
-    A2 -->|MCP| TV[Tavily API]
+    subgraph Agents [AI Agents - Sequential Pipeline]
+        direction TB
+        A1[Flight Agent] --> A2[Hotel Agent] --> A3[Weather Agent] --> A4[Itinerary Agent] --> A5[Final Agent]
+    end
     
-    A3 -->|MCP| OW[OpenWeather API]
-    A3 -->|LLM| GQ2[Groq]
+    G --> Agents
     
-    A4 -->|Reads| A1
-    A4 -->|Reads| A2
-    A4 -->|Reads| A3
-    A4 -->|LLM| GQ3[Groq]
+    A1 -->|Airport & airline data| AS[AviationStack<br/>MCP Server]
+    A1 -->|Generate flight plan| GQ[Groq LLM<br/>gpt-oss-20b]
     
-    A5 -->|Reads| A4
-    A5 -->|LLM| GQ4[Groq]
+    A2 -->|Search hotels| TV[Tavily<br/>MCP Server]
     
-    API -->|Checkpoints| PG[(PostgreSQL)]
+    A3 -->|Current weather + forecast| OW[OpenWeather<br/>MCP Server]
+    A3 -->|Extract destination| GQ
     
-    A5 -->|Response| UI
-    UI -->|Display| U
+    A4 -->|Combine all research| GQ
+    
+    A5 -->|Format final response| GQ
+    
+    API -->|Save conversation| PG[(PostgreSQL<br/>Checkpoints)]
+    
+    A5 --> UI
+    UI --> U
 
-    style U fill:#4f46e5,stroke:#3730a3,color:#fff
-    style API fill:#059669,stroke:#047857,color:#fff
-    style G fill:#d97706,stroke:#b45309,color:#fff
-    style PG fill:#2563eb,stroke:#1d4ed8,color:#fff
+    style U fill:#6366f1,stroke:#4f46e5,color:#fff
+    style UI fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style API fill:#10b981,stroke:#059669,color:#fff
+    style G fill:#f59e0b,stroke:#d97706,color:#fff
+    style PG fill:#3b82f6,stroke:#2563eb,color:#fff
+    style AS fill:#ec4899,stroke:#db2777,color:#fff
+    style TV fill:#ec4899,stroke:#db2777,color:#fff
+    style OW fill:#ec4899,stroke:#db2777,color:#fff
+    style GQ fill:#f97316,stroke:#ea580c,color:#fff
+    style Agents fill:#1e293b,stroke:#334155,color:#fff
 ```
 
 ## Getting started
