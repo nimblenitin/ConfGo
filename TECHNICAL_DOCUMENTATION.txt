@@ -1,0 +1,532 @@
+================================================================================
+                     ConfGo - Technical Documentation
+================================================================================
+
+A multi-agent AI travel planner for tech conferences.
+Built with FastAPI + LangGraph + Groq LLM + MCP Protocol.
+
+================================================================================
+1. PROJECT STRUCTURE
+================================================================================
+
+TravelBrain-Multi-Agent-AI-Travel-Planner/
+|
+|-- app.py                          # FastAPI entry point
+|-- pyproject.toml                  # Dependencies
+|-- uv.lock                         # Locked dependency versions
+|-- .python-version                 # Python 3.11
+|-- .env.example                    # Env var template
+|-- .env                            # Live env vars (gitignored)
+|-- Dockerfile                      # Multi-stage Docker build
+|-- docker-compose.yml              # App + Redis + PostgreSQL
+|-- vercel.json                     # Vercel frontend deployment
+|-- README.md                       # Project overview
+|
+|-- scripts/
+|   |-- build-frontend.sh           # Collects static files for Vercel
+|
+|-- src/                            # Backend Python code
+|   |-- api/
+|   |   |-- sessions.py             # In-memory credential store
+|   |   |-- validation.py           # Live credential checks
+|   |
+|   |-- agents/
+|   |   |-- prompts.py              # All prompt templates
+|   |   |-- destination.py          # LLM destination extraction
+|   |   |-- flight_agent.py         # Flight research agent
+|   |   |-- hotel_agent.py          # Hotel search agent
+|   |   |-- weather_agent.py        # Weather data agent
+|   |   |-- itinerary_agent.py      # Itinerary generator
+|   |   |-- final_agent.py          # Response formatter
+|   |
+|   |-- clients/
+|   |   |-- llm.py                  # Groq LLM factory
+|   |   |-- cache.py                # Redis cache layer
+|   |   |-- checkpointer.py         # PostgreSQL checkpointer
+|   |
+|   |-- config/
+|   |   |-- settings.py             # Central config reader
+|   |   |-- session.py              # Per-session credentials
+|   |
+|   |-- graph/
+|   |   |-- state.py                # TravelState TypedDict
+|   |   |-- graph.py                # LangGraph pipeline
+|   |   |-- runner.py               # Entry point for API
+|   |
+|   |-- mcp_servers/
+|   |   |-- config.py               # Server registry
+|   |   |-- remote.py               # Tavily HTTP client
+|   |   |-- local.py                # AviationStack + Weather stdio
+|   |   |-- weather_server.py       # OpenWeather MCP server
+|   |   |-- diagnostics.py          # Connectivity checks
+|   |
+|   |-- utils/
+|       |-- async_utils.py          # Async bridge + helpers
+|
+|-- frontend/                       # Web frontend
+    |-- templates/
+    |   |-- index.html              # SPA HTML
+    |-- static/
+        |-- css/styles.css          # Design system + themes
+        |-- js/app.js               # Main frontend logic
+        |-- js/markdown.js          # Markdown renderer
+
+================================================================================
+2. ENTRY POINT - app.py
+================================================================================
+
+Framework: FastAPI with Uvicorn
+Templates: Jinja2 from frontend/templates/
+Static files: Mounted at /static from frontend/static/
+
+Pydantic Models:
+- TravelRequest: message: str, thread_id: str | None
+- ConfigRequest: groq_api_key: str | None, database_url: str | None
+
+Endpoints:
+- GET  /              -> Serves index.html
+- HEAD /              -> Health probe for hosting platforms
+- GET  /health        -> Returns API status + credential status + cache status
+- GET  /api/config    -> Returns credential status (no secrets exposed)
+- POST /api/config    -> Validates and stores session credentials
+- DELETE /api/config  -> Clears session credentials, falls back to .env
+- POST /api/travel    -> Main endpoint - runs the multi-agent pipeline
+
+Request flow for /api/travel:
+1. Extract session credentials from cookie
+2. Validate message is not empty (400 if empty)
+3. Bind credentials to request context
+4. Call run_travel_agent(user_input, thread_id)
+5. Return JSON with all results
+6. On MissingCredentialsError: return 428
+7. On other errors: return 500
+
+Server config:
+- Default: 127.0.0.1:8000 with hot-reload
+- Docker: HOST=0.0.0.0
+
+================================================================================
+3. LANGGRAPH ARCHITECTURE
+================================================================================
+
+3.1 State (src/graph/state.py)
+
+class TravelState(TypedDict):
+    messages: Annotated[list[AnyMessage], operator.add]  # Append-only
+    user_query: str          # Original user input
+    flight_results: str      # Flight agent output
+    hotel_results: str       # Hotel agent output
+    weather_results: str     # Weather agent output
+    itinerary: str           # Itinerary agent output
+    llm_calls: int           # LLM invocation counter
+
+Key: messages uses operator.add - nodes append, not replace.
+
+3.2 Graph (src/graph/graph.py)
+
+Linear chain (no branching):
+START -> flight_agent -> hotel_agent -> weather_agent -> itinerary_agent -> final_agent -> END
+
+Compiled with PostgreSQL checkpointer. Cached per DB URL with lru_cache(maxsize=4).
+
+3.3 Runner (src/graph/runner.py)
+
+run_travel_agent(user_input, thread_id=None):
+1. require("GROQ_API_KEY", "DATABASE_URL") - fails fast
+2. Generate thread_id if not provided
+3. Invoke compiled graph
+4. Extract final answer from messages[-1].content
+5. Return dict with all results
+
+================================================================================
+4. AGENTS - DETAILED IMPLEMENTATION
+================================================================================
+
+4.1 Prompts (src/agents/prompts.py)
+
+| Prompt | Purpose |
+|--------|---------|
+| FLIGHT_SYSTEM_PROMPT | "You are an expert travel flight planner." |
+| FLIGHT_AGENT_PROMPT | Template with {query}, {airport_data}, {airline_data} |
+| ITINERARY_SYSTEM_PROMPT | "You are an expert travel planner." |
+| ITINERARY_AGENT_PROMPT | Template with user_query + flight/hotel/weather results |
+| FINAL_SYSTEM_PROMPT | "You are a professional AI travel booking assistant." |
+| FINAL_AGENT_PROMPT | Template with all data, asks for 7 formatted sections |
+| HOTEL_SEARCH_QUERY | "Best hotels for {user_query}" |
+| WEATHER_RESULTS_TEMPLATE | Combines weather + forecast data |
+| DESTINATION_EXTRACTION_PROMPT | Extract destination from free-form query |
+
+4.2 Destination Extraction (src/agents/destination.py)
+
+- Function: extract_destination(query) -> str
+- Cached 24 hours via @cached
+- Sends query to LLM asking for just the destination name
+- Used by weather_agent
+
+4.3 Flight Agent (src/agents/flight_agent.py)
+
+Function: flight_agent(state) -> dict
+
+Steps:
+1. Call aviation_mcp_call("list_airports") - cached 7 days
+2. Call aviation_mcp_call("list_airlines") - cached 7 days
+3. Truncate to 3000 chars each
+4. Format FLIGHT_AGENT_PROMPT
+5. Send to Groq LLM
+6. Store in flight_results
+
+Error handling: On exception, sets error string - does not crash pipeline.
+
+4.4 Hotel Agent (src/agents/hotel_agent.py)
+
+Function: hotel_agent(state) -> dict
+
+Steps:
+1. Format query: "Best hotels for {user_query}"
+2. Call tavily_mcp_search(query) - cached 6 hours
+3. Store in hotel_results
+
+No LLM call - pure data retrieval.
+
+4.5 Weather Agent (src/agents/weather_agent.py)
+
+Function: weather_agent(state) -> dict
+
+Steps:
+1. extract_destination(user_query) - LLM call, cached 24h
+2. weather_mcp_search(city) - current weather, cached 10min
+3. forecast_mcp_search(city) - forecast, cached 1h
+4. Combine via WEATHER_RESULTS_TEMPLATE
+
+4.6 Itinerary Agent (src/agents/itinerary_agent.py)
+
+Function: itinerary_agent(state) -> dict
+
+Steps:
+1. Format ITINERARY_AGENT_PROMPT with all prior results
+2. Send to Groq LLM
+3. Store in itinerary
+
+4.7 Final Agent (src/agents/final_agent.py)
+
+Function: final_agent(state) -> dict
+
+Steps:
+1. Format FINAL_AGENT_PROMPT with all data
+2. Send to Groq LLM
+3. Append to messages (this becomes the final answer)
+
+================================================================================
+5. MCP SERVERS
+================================================================================
+
+5.1 Server Registry (src/mcp_servers/config.py)
+
+Remote Servers:
+- tavily: streamable_http -> https://mcp.tavily.com/mcp/?tavilyApiKey={key}
+
+Local Servers (stdio):
+- aviationstack: uvx --with mcp<2 aviationstack-mcp
+- weather: {sys.executable} {WEATHER_SERVER_PATH}
+
+Functions:
+- get_client(): Returns shared MultiServerMCPClient
+- load_tools(server_name): Loads one server's tools
+- require_tools(server_name, tools, *names): Validates tools exist
+
+5.2 Local Clients (src/mcp_servers/local.py)
+
+AviationStack:
+- aviation_mcp_call(tool_name, tool_args)
+- Reference tools (list_airports, list_airlines): cached 7 days
+- Other tools: not cached
+
+Weather:
+- weather_mcp_search(city): cached 10 minutes
+- forecast_mcp_search(city): cached 1 hour
+
+5.3 Remote Client (src/mcp_servers/remote.py)
+
+Tavily:
+- tavily_mcp_search(query): cached 6 hours
+
+5.4 Weather Server (src/mcp_servers/weather_server.py)
+
+Standalone FastMCP server wrapping OpenWeatherMap API:
+
+Tools:
+- get_current_weather(city):
+  - Calls /data/2.5/weather
+  - Returns: city, temperature_c, feels_like_c, humidity, condition, wind_speed
+
+- get_forecast(city):
+  - Calls /data/2.5/forecast
+  - Returns: first 5 entries with datetime, temperature, weather
+
+5.5 Diagnostics (src/mcp_servers/diagnostics.py)
+
+- check_servers(): Tests connectivity to all servers
+- get_all_tools(): Gets all available tools
+
+================================================================================
+6. CLIENTS
+================================================================================
+
+6.1 LLM Client (src/clients/llm.py)
+
+- Model: ChatGroq from langchain-groq
+- Default: openai/gpt-oss-20b
+- Factory cached per API key (lru_cache maxsize=8)
+
+6.2 Cache Client (src/clients/cache.py)
+
+Design principles:
+- Redis is optional - falls through if unavailable
+- Values stored as JSON (not pickled)
+- Graceful degradation on failures
+
+Decorators:
+- @cached(prefix, ttl): For sync functions
+- @async_cached(prefix, ttl): For async functions
+
+TTL defaults:
+- Airports: 7 days
+- Airlines: 7 days
+- Hotels: 6 hours
+- Weather: 10 minutes
+- Forecast: 1 hour
+- Destination: 24 hours
+
+6.3 Checkpointer (src/clients/checkpointer.py)
+
+- Uses PostgresSaver from langgraph-checkpoint-postgres
+- Creates tables via setup() on first use
+- Conversation state persisted per thread_id
+
+================================================================================
+7. CONFIGURATION
+================================================================================
+
+7.1 Settings (src/config/settings.py)
+
+All environment variables:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| GROQ_API_KEY | Yes | None | Groq API key |
+| DATABASE_URL | Yes | None | PostgreSQL connection |
+| TAVILY_API_KEY | Yes | None | Tavily search key |
+| AVIATIONSTACK_API_KEY | Yes | None | AviationStack key |
+| OPENWEATHER_API_KEY | Yes | None | OpenWeather key |
+| GROQ_MODEL | No | openai/gpt-oss-20b | LLM model |
+| REDIS_URL | No | None | Redis connection |
+| CACHE_ENABLED | No | true | Enable caching |
+| HOST | No | 127.0.0.1 | Server bind address |
+| PORT | No | 8000 | Server port |
+| RELOAD | No | true | Hot-reload |
+
+7.2 Session (src/config/session.py)
+
+Credential resolution (session takes precedence over .env):
+- resolve_groq_api_key(): session or settings.GROQ_API_KEY
+- resolve_database_url(): session or settings.DATABASE_URL
+
+Context management:
+- use_credentials(credentials): Sets ContextVar for request duration
+- require(*names): Raises MissingCredentialsError if any missing
+
+================================================================================
+8. API LAYER
+================================================================================
+
+8.1 Sessions (src/api/sessions.py)
+
+In-memory credential store:
+- Cookie name: confgo_session
+- TTL: 12 hours
+- Max sessions: 500
+- Thread-safe via threading.Lock
+
+Functions:
+- new_session_id(): Cryptographically random token
+- get_credentials_for(session_id): Returns credentials with sliding expiry
+- store_credentials(session_id, groq_api_key, database_url): Merges values
+- clear_credentials(session_id): Removes session
+
+8.2 Validation (src/api/validation.py)
+
+Liveness checks (10-second timeout):
+- check_groq_api_key(key): GET /openai/v1/models
+- check_database_url(url): psycopg SELECT 1
+
+================================================================================
+9. FRONTEND
+================================================================================
+
+9.1 HTML (frontend/templates/index.html)
+
+Single-page application:
+- Aurora background with animated blobs
+- Topbar: brand, status indicator, new trip, settings, theme toggle
+- Setup gate: Credential input when no keys configured
+- Hero: "Tell me the conference name you plan to attend."
+- Messages: Chat-style response area
+- Composer: Textarea with trip builder toggle
+- Trip builder: Form with From, To, Date, Days, Travellers, Budget, Interests
+- Settings modal: Credential management
+
+9.2 JavaScript (frontend/static/js/app.js)
+
+State:
+- threadId: Current conversation thread
+- busy: Loading flag
+- config: Last /api/config payload
+
+API calls:
+- GET /api/config (on boot + every 60s)
+- POST /api/config (save credentials)
+- DELETE /api/config (reset to .env)
+- POST /api/travel (send message)
+
+Progress bar:
+- 5 phases weighted: flights (22%), hotels (18%), weather (14%), itinerary (23%), final (23%)
+- Estimated total: 55 seconds
+- Updates every 250ms
+
+Message rendering:
+- renderUser(text): User bubble
+- renderResult(result): Agent response with markdown
+- renderError(message, kind): Error card
+
+Trip builder:
+- Assembles natural-language prompt from form fields
+
+Theme:
+- Light/dark toggle persisted in localStorage
+
+9.3 Markdown (frontend/static/js/markdown.js)
+
+Zero-dependency renderer (window.MD.render(src)):
+- Escapes all HTML first (security)
+- Supports: headings, bold, italic, strikethrough, code, links, lists, blockquotes, tables
+
+9.4 CSS (frontend/static/css/styles.css)
+
+Design system:
+- CSS custom properties for light/dark themes
+- Light: white/glass surfaces, teal accent
+- Dark: deep navy, brighter teal
+- Typography: Inter + JetBrains Mono
+- Glass-morphism cards with backdrop blur
+- Responsive: 900px, 560px breakpoints
+- Print styles included
+- Accessibility: prefers-reduced-motion
+
+================================================================================
+10. DEPLOYMENT
+================================================================================
+
+10.1 Dockerfile
+
+Multi-stage build:
+- Builder: python:3.11-slim-bookworm + uv
+- Runtime: python:3.11-slim-bookworm + curl
+- Non-root user (app, UID 1001)
+- Pre-installs aviationstack-mcp
+- Healthcheck: curl /health every 30s
+
+10.2 Docker Compose
+
+Services:
+- app: FastAPI (port 8000)
+- redis: redis:7-alpine (port 6379)
+- postgres: postgres:16-alpine (optional, port 5432)
+
+10.3 Vercel
+
+- Frontend only on CDN
+- API rewrites to Render backend
+- Static file caching
+
+================================================================================
+11. COMPLETE DATA FLOW
+================================================================================
+
+Step 1: Frontend
+- User types message or uses trip builder
+- app.js sends POST /api/travel {message, thread_id}
+- Shows animated progress bar
+
+Step 2: API Layer
+- Extracts session credentials from cookie
+- Validates message
+- Binds credentials to context
+- Calls run_travel_agent()
+
+Step 3: Runner
+- require() checks credentials
+- Generates thread_id
+- Invokes compiled graph
+
+Step 4: Graph Execution (5 sequential nodes)
+
+Node 1 - Flight Agent:
+- AviationStack MCP -> airports + airlines data
+- Groq LLM -> flight recommendations
+- Stored in flight_results
+
+Node 2 - Hotel Agent:
+- Tavily MCP -> hotel search results
+- No LLM call
+- Stored in hotel_results
+
+Node 3 - Weather Agent:
+- LLM -> extract destination city
+- OpenWeather MCP -> current weather + forecast
+- Stored in weather_results
+
+Node 4 - Itinerary Agent:
+- Groq LLM -> day-by-day plan
+- Uses flight/hotel/weather results
+- Stored in itinerary
+
+Node 5 - Final Agent:
+- Groq LLM -> formatted response
+- Uses all previous results
+- Becomes final answer
+
+Step 5: Response
+- Extract messages[-1].content
+- Return JSON with all fields
+- PostgreSQL saves checkpoint
+
+Step 6: Frontend
+- Progress bar completes
+- Renders markdown response
+- User can continue or start new trip
+
+================================================================================
+12. DEPENDENCIES
+================================================================================
+
+| Package | Purpose |
+|---------|---------|
+| fastapi | Web framework |
+| uvicorn | ASGI server |
+| langchain | LLM orchestration |
+| langchain-groq | Groq integration |
+| langchain-mcp-adapters | MCP protocol adapter |
+| langgraph | Agent orchestration |
+| langgraph-checkpoint-postgres | PostgreSQL persistence |
+| mcp | Model Context Protocol |
+| psycopg | PostgreSQL driver |
+| redis | Caching |
+| tavily | Hotel search |
+| requests | HTTP client |
+| python-dotenv | .env loading |
+| nest-asyncio | Nested event loops |
+| jinja2 | Templates |
+| pycountry | Country codes |
+| airportsdata | Airport data |
+
+================================================================================
