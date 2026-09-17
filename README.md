@@ -1,10 +1,6 @@
 # ConfGo
 
-A multi-agent AI tool that plans your trip to attend tech conferences. Type in the conference name and get flights, hotels, weather, and a day-by-day itinerary in about a minute.
-
-## What it does
-
-You describe the conference trip you want - for example, "Plan a trip to attend PyTorch Conference 2026 in North America with mid-range budget" - and a team of AI agents goes and researches it for you.
+A multi-agent AI tool that plans your trip to attend tech conferences. Type in the conference name - for example, "Plan a trip to attend PyTorch Conference 2026 in North America with mid-range budget" - and a team of AI agents goes and researches it for you, getting back flights, hotels, weather, and a day-by-day itinerary in about a minute.
 
 - **Flights** - airports, airlines, duration, fare range
 - **Hotels** - options matched to your budget and location
