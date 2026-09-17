@@ -49,18 +49,6 @@ uv run python app.py
 
 Open http://127.0.0.1:8000 in your browser. You should see a green "API connected" dot at the bottom.
 
-## Usage
-
-Just type what you want in the message box. Some examples:
-
-> Plan a trip to attend PyTorch Conference 2026 in North America with mid-range budget
-
-> I need to attend AWS re:Invent 2026 in Las Vegas, 5 days, budget around $3000
-
-A plan takes about 30-90 seconds to build. Your results are split into tabs - Plan, Itinerary, Flights, Hotels, Weather.
-
-Every trip is saved automatically. You can click any saved trip in the sidebar to reopen it and ask follow-up questions.
-
 ## Troubleshooting
 
 **Page loads but planning fails** - Check the status indicator at the bottom of the sidebar. If it says "API unreachable", restart the app with `uv run python app.py`.
