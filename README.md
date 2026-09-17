@@ -26,7 +26,7 @@ You describe the conference trip you want - for example, "Plan a trip to attend 
 Clone and install:
 
 ```bash
-git clone https://github.com/KalyanM45/TravelBrain-Multi-Agent-AI-Travel-Planner.git
+git clone https://github.com/nimblenitin/ConfGo.git
 cd TravelBrain-Multi-Agent-AI-Travel-Planner
 uv sync
 ```
