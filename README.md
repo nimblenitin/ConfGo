@@ -27,7 +27,7 @@ Clone and install:
 
 ```bash
 git clone https://github.com/nimblenitin/ConfGo.git
-cd TravelBrain-Multi-Agent-AI-Travel-Planner
+cd ConfGo
 uv sync
 ```
 
