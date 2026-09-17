@@ -12,46 +12,39 @@ A multi-agent AI tool that plans your trip to attend tech conferences. Type in t
 
 ```mermaid
 flowchart TD
-    U([User types conference trip request]) --> UI[ConfGo UI<br/>FastAPI + Jinja2]
+    U([User]) --> UI[ConfGo UI]
+    UI --> API[FastAPI]
+    API --> G[LangGraph Pipeline]
     
-    UI --> API[API Layer<br/>POST /api/travel]
+    G --> A1[Flight Agent]
+    G --> A2[Hotel Agent]
+    G --> A3[Weather Agent]
+    G --> A4[Itinerary Agent]
+    G --> A5[Final Agent]
     
-    API --> G{LangGraph<br/>Pipeline}
+    A1 --> AS[AviationStack]
+    A2 --> TV[Tavily]
+    A3 --> OW[OpenWeather]
     
-    subgraph Agents [AI Agents - Sequential Pipeline]
-        direction TB
-        A1[Flight Agent] --> A2[Hotel Agent] --> A3[Weather Agent] --> A4[Itinerary Agent] --> A5[Final Agent]
-    end
+    A1 --> LLM[Groq LLM]
+    A3 --> LLM
+    A4 --> LLM
+    A5 --> LLM
     
-    G --> Agents
-    
-    A1 -->|Airport & airline data| AS[AviationStack<br/>MCP Server]
-    A1 -->|Generate flight plan| GQ[Groq LLM<br/>gpt-oss-20b]
-    
-    A2 -->|Search hotels| TV[Tavily<br/>MCP Server]
-    
-    A3 -->|Current weather + forecast| OW[OpenWeather<br/>MCP Server]
-    A3 -->|Extract destination| GQ
-    
-    A4 -->|Combine all research| GQ
-    
-    A5 -->|Format final response| GQ
-    
-    API -->|Save conversation| PG[(PostgreSQL<br/>Checkpoints)]
+    API --> PG[(PostgreSQL)]
     
     A5 --> UI
     UI --> U
 
-    style U fill:#6366f1,stroke:#4f46e5,color:#fff
-    style UI fill:#8b5cf6,stroke:#7c3aed,color:#fff
-    style API fill:#10b981,stroke:#059669,color:#fff
-    style G fill:#f59e0b,stroke:#d97706,color:#fff
-    style PG fill:#3b82f6,stroke:#2563eb,color:#fff
-    style AS fill:#ec4899,stroke:#db2777,color:#fff
-    style TV fill:#ec4899,stroke:#db2777,color:#fff
-    style OW fill:#ec4899,stroke:#db2777,color:#fff
-    style GQ fill:#f97316,stroke:#ea580c,color:#fff
-    style Agents fill:#1e293b,stroke:#334155,color:#fff
+    style U fill:#6366f1,color:#fff
+    style UI fill:#8b5cf6,color:#fff
+    style API fill:#10b981,color:#fff
+    style G fill:#f59e0b,color:#fff
+    style PG fill:#3b82f6,color:#fff
+    style AS fill:#ec4899,color:#fff
+    style TV fill:#ec4899,color:#fff
+    style OW fill:#ec4899,color:#fff
+    style LLM fill:#f97316,color:#fff
 ```
 
 ## Getting started
