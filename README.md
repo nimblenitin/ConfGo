@@ -59,4 +59,70 @@ Open http://127.0.0.1:8000 in your browser. You should see a green "API connecte
 - OpenWeather for weather
 - PostgreSQL for saving trips
 
+## Architecture
 
+```mermaid
+flowchart LR
+    User([User]) -->|Message| UI[ConfGo UI]
+    UI -->|POST /api/travel| API[FastAPI]
+    API --> Graph[LangGraph Pipeline]
+    
+    Graph --> A1[Flight Agent]
+    Graph --> A2[Hotel Agent]
+    Graph --> A3[Weather Agent]
+    Graph --> A4[Itinerary Agent]
+    Graph --> A5[Final Agent]
+    
+    A1 -->|AviationStack MCP| DB1[Airport Data]
+    A1 -->|Groq LLM| LLM1[Flight Analysis]
+    
+    A2 -->|Tavily MCP| WEB[Hotel Search]
+    
+    A3 -->|OpenWeather MCP| WX[Weather Data]
+    A3 -->|Groq LLM| LLM2[Destination Extract]
+    
+    A4 -->|Groq LLM| LLM3[Itinerary Planning]
+    A4 -->|Reads| A1
+    A4 -->|Reads| A2
+    A4 -->|Reads| A3
+    
+    A5 -->|Groq LLM| LLM4[Final Response]
+    A5 -->|Reads| A4
+    
+    API -->|Checkpoints| PG[(PostgreSQL)]
+    
+    style User fill:#4f46e5,stroke:#3730a3,color:#fff
+    style API fill:#059669,stroke:#047857,color:#fff
+    style Graph fill:#d97706,stroke:#b45309,color:#fff
+    style PG fill:#2563eb,stroke:#1d4ed8,color:#fff
+```
+
+```mermaid
+flowchart TD
+    subgraph Request Flow
+        U[User sends message] --> R[Runner validates credentials]
+        R --> G[LangGraph executes pipeline]
+        G --> F[Flight Agent - AviationStack]
+        F --> H[Hotel Agent - Tavily]
+        H --> W[Weather Agent - OpenWeather]
+        W --> I[Itinerary Agent - Groq LLM]
+        I --> S[Final Agent - Formats response]
+        S --> P[Response sent back]
+    end
+    
+    subgraph External Services
+        GQ[Groq API]
+        TV[Tavily API]
+        AS[AviationStack API]
+        OW[OpenWeather API]
+    end
+    
+    F --> GQ
+    H --> TV
+    W --> OW
+    I --> GQ
+    S --> GQ
+    
+    style U fill:#4f46e5,stroke:#3730a3,color:#fff
+    style P fill:#059669,stroke:#047857,color:#fff
+```
