@@ -49,20 +49,6 @@ uv run python app.py
 
 Open http://127.0.0.1:8000 in your browser. You should see a green "API connected" dot at the bottom.
 
-## Troubleshooting
-
-**Page loads but planning fails** - Check the status indicator at the bottom of the sidebar. If it says "API unreachable", restart the app with `uv run python app.py`.
-
-**Model not found error** - The AI model may have been retired. Check available models:
-
-```bash
-curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY"
-```
-
-Pick one and set it as `GROQ_MODEL` in your `.env`.
-
-**DATABASE_URL missing** - Add a PostgreSQL connection string to your `.env` file.
-
 ## Tech stack
 
 - FastAPI + Uvicorn
