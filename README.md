@@ -24,36 +24,6 @@ Type in the conference name - for example, "Plan a trip to attend PyTorch Confer
 
 *The user sends a natural-language conference trip request through the ConfGo UI. The FastAPI server resolves credentials, then dispatches the request through a LangGraph pipeline of five specialized agents. Each agent calls external services via MCP (Model Context Protocol) and the Groq LLM, building up flight, hotel, weather, and itinerary data. The final agent formats everything into a polished response, and the conversation is checkpointed to PostgreSQL for multi-turn continuity.*
 
-<details>
-<summary><b>Detailed Agent Flow</b></summary>
-
-```
-User Request
-     |
-     v
-[FastAPI Server]
-     |
-     v
-[LangGraph Pipeline]
-     |
-     +---> [Flight Agent] ---> AviationStack MCP ---> Groq LLM
-     |
-     +---> [Hotel Agent] ---> Tavily MCP
-     |
-     +---> [Weather Agent] ---> OpenWeather MCP ---> Groq LLM
-     |
-     +---> [Itinerary Agent] ---> Groq LLM (reads all above)
-     |
-     +---> [Final Agent] ---> Groq LLM (formats response)
-     |
-     v
-[PostgreSQL Checkpoint]
-     |
-     v
-Response to User
-```
-</details>
-
 ## Getting started
 
 ### What you need
