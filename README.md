@@ -22,8 +22,6 @@ Type in the conference name - for example, "Plan a trip to attend PyTorch Confer
   <img src="assets/confgo_arch.svg" alt="ConfGo Architecture" width="860"/>
 </p>
 
-*The user sends a natural-language conference trip request through the ConfGo UI. The FastAPI server resolves credentials, then dispatches the request through a LangGraph pipeline of five specialized agents. Each agent calls external services via MCP (Model Context Protocol) and the Groq LLM, building up flight, hotel, weather, and itinerary data. The final agent formats everything into a polished response, and the conversation is checkpointed to PostgreSQL for multi-turn continuity.*
-
 ## Getting started
 
 ### What you need
