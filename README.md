@@ -1,4 +1,6 @@
-# ConfGo
+<p align="center">
+  <h1 align="center">ConfGo</h1>
+</p>
 
 <p align="center">
   A multi-agent AI tool that plans your trip to attend tech conferences.
