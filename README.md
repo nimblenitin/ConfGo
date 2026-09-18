@@ -60,6 +60,7 @@ Open http://127.0.0.1:8000 in your browser. You should see a green "API connecte
 - FastAPI + Uvicorn
 - LangGraph for agent orchestration
 - Groq for AI inference
+- MCP (Model Context Protocol) for agent-tool communication
 - Tavily for hotel search
 - AviationStack for flight data
 - OpenWeather for weather
